@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <script src="../ScriptsJQuery/sorteable/sorttable.js"></script>
+  <meta charset="UTF-8">
+  <title>Monitor Trader</title>
+  <style>
+    body{font-family: Arial, sans-serif;margin:0;background:#f4f6f8;}
+    .container{max-width:1200px;margin:auto;padding:16px;}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem;}
+    .toolbar select,.toolbar input{padding:6px;border:1px solid #ccc;border-radius:4px;}
+    .toolbar button{padding:6px 12px;border:none;border-radius:4px;background:#2d9cdb;color:#fff;cursor:pointer;}
+    .table-wrapper{overflow-x:auto;background:#fff;padding:8px;border-radius:4px;box-shadow:0 2px 4px rgba(0,0,0,0.1);}
+    table{width:100%;border-collapse:collapse;min-width:1200px;}
+    th,td{padding:6px;text-align:left;border-bottom:1px solid #eee;white-space:nowrap;font-size:0.9rem;}
+    thead{background:#2d9cdb;color:#fff;}
+    tbody tr:nth-child(even){background:#f9f9f9;}
+    .placeholder{text-align:center;color:#888;padding:2rem;}
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="toolbar">
+    <label for="macroactivo">Macro activo:</label>
+    <select id="macroactivo"></select>
+    <label for="fechaDesde">Desde:</label>
+    <input type="date" id="fechaDesde" />
+    <button id="btnRefrescar">Refrescar</button>
+  </div>
+  <div class="table-wrapper">
+    <table id="tablaIntenciones" class="sortable">
+      <thead><tr id="cabecera"></tr></thead>
+      <tbody><tr class="placeholder"><td>Cargando...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+<script type="module">
+  import {listarMacroActivosTrader, obtenerIntencionesTrader} from './vistaTrader.js';
+  const selMacro = document.getElementById('macroactivo');
+  const fecha = document.getElementById('fechaDesde');
+  const btn = document.getElementById('btnRefrescar');
+  const tbody = document.querySelector('#tablaIntenciones tbody');
+  const thead = document.getElementById('cabecera');
+
+  const hoy = new Date().toISOString().slice(0,10);
+  fecha.max = hoy;
+  fecha.value = hoy;
+
+  async function cargarOpciones(){
+    try{
+      const datos = await listarMacroActivosTrader();
+      selMacro.innerHTML = '';
+      datos.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;selMacro.appendChild(o);});
+      cargarTabla();
+    }catch(e){console.error(e);}
+  }
+
+  function formatear(key){return key.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase());}
+
+  async function cargarTabla(){
+    tbody.innerHTML='<tr class="placeholder"><td>Cargando...</td></tr>';
+    try{
+      const datos = await obtenerIntencionesTrader(selMacro.value,fecha.value,1,50);
+      if(!Array.isArray(datos) || datos.length===0){
+        tbody.innerHTML='<tr class="placeholder"><td>Sin datos</td></tr>';
+        thead.innerHTML='';
+        return;
+      }
+      thead.innerHTML='';
+      Object.keys(datos[0]).forEach(k=>{const th=document.createElement('th');th.textContent=formatear(k);thead.appendChild(th);});
+      tbody.innerHTML='';
+      datos.forEach(item=>{
+        const tr=document.createElement('tr');
+        Object.values(item).forEach(val=>{const td=document.createElement('td');td.textContent=val;tr.appendChild(td);});
+        tbody.appendChild(tr);
+      });
+      sorttable.makeSortable(document.getElementById('tablaIntenciones'));
+    }catch(e){
+      console.error(e);
+      tbody.innerHTML='<tr class="placeholder"><td>Error al cargar datos</td></tr>';
+    }
+  }
+
+  btn.addEventListener('click',cargarTabla);
+  selMacro.addEventListener('change',cargarTabla);
+  cargarOpciones();
+</script>
+</body>
+</html>
