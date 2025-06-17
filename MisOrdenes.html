@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <script src="../ScriptsJQuery/sorteable/sorttable.js"></script>
+  <meta charset="UTF-8" />
+  <title>Gestión de Intenciones</title>
+  <style>
+    :root {
+      --color-primary: #2d9cdb;
+      --color-secondary: #27ae60;
+      --color-accent: #f2994a;
+      --color-bg: #f4f6f8;
+      --color-card: #ffffff;
+      --color-text: #333333;
+      --radius: 6px;
+      --spacing: 8px;
+      --font: "Segoe UI", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background-color: var(--color-bg);
+      color: var(--color-text);
+      line-height: 1.4;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      padding: var(--spacing);
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing);
+      margin-bottom: 1rem;
+      align-items: center;
+    }
+
+    .toolbar select,
+    .toolbar input[type="date"] {
+      padding: var(--spacing);
+      border: 1px solid #ccc;
+      border-radius: var(--radius);
+      background: #fff;
+    }
+
+    .toolbar button {
+      padding: var(--spacing) 1.5rem;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+
+    .btn-create    { background: var(--color-primary); color: #fff; }
+    .btn-refresh   { background: var(--color-secondary); color: #fff; }
+    .btn-history   { background: #eb5757; color: #fff; }
+    .btn-download  { background: var(--color-accent); color: #fff; }
+    .btn-edit      { background: #f2c94c; color: #333; }
+    .btn-renew     { background: #56ccf2; color: #333; }
+    .btn-cancel    { background: #bb6bd9; color: #fff; }
+
+    .toolbar button:hover { opacity: 0.9; }
+
+    .toolbar-group {
+      display: flex;
+      gap: var(--spacing);
+      flex-wrap: wrap;
+    }
+
+    .table-wrapper {
+      background: var(--color-card);
+      border-radius: var(--radius);
+      padding: var(--spacing);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: var(--spacing);
+      table-layout: auto;
+      min-width: 1500px;
+    }
+
+    thead {
+      background: var(--color-primary);
+      color: #fff;
+    }
+
+    th, td {
+      padding: var(--spacing);
+      text-align: left;
+      border-bottom: 1px solid #eee;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 200px;
+      font-size: 0.9rem;
+    }
+
+    tbody tr:hover {
+      background: #f1f9ff;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    .placeholder {
+      text-align: center;
+      color: #888;
+      padding: 2rem;
+    }
+
+    td input[type="checkbox"] {
+      transform: scale(1.2);
+      margin: 0 auto;
+      display: block;
+      cursor: pointer;
+    }
+
+    .editable-table td {
+      border: 1px solid #ccc;
+      padding: 6px;
+      min-width: 100px;
+    }
+
+    .editable-table td:focus {
+      outline: 2px solid var(--color-primary);
+      background-color: #e6f4ff;
+    }
+
+    .form-toolbar {
+      margin-top: 1rem;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .form-toolbar button {
+      padding: 8px 16px;
+      font-weight: bold;
+      border-radius: var(--radius);
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-save { background: var(--color-secondary); color: white; }
+    .btn-cancel-form { background: #eb5757; color: white; }
+    .btn-add-row { background: var(--color-accent); color: white; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="toolbar">
+      <div class="toolbar-group">
+        <label for="sel-mercado">Mercado:</label>
+        <select id="sel-mercado">
+          <option>Renta Variable</option>
+          <option>Deuda Privada</option>
+          <option>Deuda Pública</option>
+          <option>Fondos</option>
+          <option>Forex</option>
+          <option>Liquidez</option>
+          <option>Swaps</option>
+        </select>
+        <button class="btn-create" id="btn-crear">Crear</button>
+      </div>
+
+      <div class="toolbar-group">
+        <label for="filtro-fecha">Mostrar desde:</label>
+        <input type="date" id="filtro-fecha"/>
+      </div>
+
+      <div class="toolbar-group">
+        <label for="sel-portafolio">Portfolio manager:</label>
+        <select id="sel-portafolio">
+          <option value="">(Todos)</option>
+        </select>
+      </div>
+
+      <div class="toolbar-group" style="margin-left:auto;">
+        <button class="btn-refresh"  id="btn-refresh"  title="Refrescar">🔄 Refrescar</button>
+        <button class="btn-history"  id="btn-history"  title="Historia">🕘 Historia</button>
+        <button class="btn-download" id="btn-download" title="Descargar">⬇️ Descargar</button>
+        <button class="btn-edit"     id="btn-edit"     title="Editar">✏️ Editar</button>
+        <button class="btn-renew"    id="btn-renew"    title="Renovar">🔄 Renovar</button>
+        <button class="btn-cancel"   id="btn-cancel"   title="Cancelar">❌ Cancelar</button>
+      </div>
+    </div>
+
+    <div class="table-wrapper" id="data-table-wrapper">
+      <table id="intencionesTable" class="sortable">
+        <thead><tr id="intencionesHeader"></tr></thead>
+        <tbody>
+          <tr class="placeholder"><td colspan="8">Cargando datos…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-wrapper" id="formulario-wrapper" style="display:none;">
+      <table id="formulario-table" class="editable-table">
+        <thead><tr id="formulario-headers"></tr></thead>
+        <tbody id="formulario-body"></tbody>
+      </table>
+      <div class="form-toolbar">
+        <button class="btn-save">💾 Guardar</button>
+        <button class="btn-add-row">➕ Agregar fila</button>
+        <button class="btn-cancel-form">❌ Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+
+
+  <script>
+  (function(){
+    const camposPorMercado = {
+      "Renta Variable": ["Id Portafolio", "Portafolio", "Mercado", "Tipo operación", "Emisor", "Nemotécnico", "Cantidad disponible", "Cantidad", "Tipo orden", "Precio límite", "Vigente desde", "Vigente hasta", "Comentarios PM"],
+      "Deuda Privada": ["Id Portafolio", "Portafolio", "Tipo operación", "Emisor", "Nemotécnico", "Indicador", "Cantidad disponible(Millones)", "Cantidad(Millones)", "Desde", "Hasta", "Tipo orden", "Tasa límite", "Vigente desde", "Vigente hasta", "Comentarios PM"],
+      "Deuda Pública": ["Id", "CodPortafolio", "Portafolio", "TipoOperacion", "Emisor", "Nemotecnico", "CantidadTotal", "TipoOrden", "TasaLimite", "VigenciaDesde", "VigenteHasta", "ComentariosPM"],
+      "Fondos": ["Id", "Id Portafolio", "Portafolio", "Tipo operación", "Emisor", "Nemotécnico", "Cantidad disponible", "Cantidad", "Vigente desde", "Vigente hasta", "Comentarios PM"],
+      "Forex": ["Id Portafolio", "Portafolio", "Tipo operación", "Nemotécnico", "Cantidad", "Tipo orden", "Precio límite", "Vigente desde", "Vigente hasta", "Comentarios PM"],
+      "Liquidez": ["Id Portafolio", "Portafolio", "Tipo operación", "Nemotécnico", "Cantidad disponible", "Cantidad", "Desde", "Hasta", "Tipo orden", "Tasa límite", "Vigente desde", "Vigente hasta", "Comentarios PM"],
+      "Swaps": ["Id Portafolio", "Portafolio", "Mercado", "Tipo operación", "Emisor", "Nemotécnico", "Indicador", "Cantidad", "Hasta", "Tipo orden", "Tasa límite", "Vigente desde", "Vigente hasta", "Comentarios PM"]
+    };
+    const tipoOperacionPorMercado = {
+      "Renta Variable": ["COMPRA", "VENTA"],
+      "Deuda Privada": ["COMPRA", "VENTA"],
+      "Deuda Pública": ["COMPRA", "VENTA", "COMPRA FUTURO", "VENTA FUTURO"],
+      "Fondos": ["APERTURA", "ADICION", "RETIRO", "CANCELACION"],
+      "Forex": ["COMPRA SPOT", "VENTA SPOT", "COMPRA NDF", "VENTA NDF", "COMPRA FUTURO", "VENTA FUTURO", "COMPRA OPCIONES", "VENTA OPCIONES"],
+      "Swaps": ["COMPRA", "VENTA", "UNWIND"]
+    };
+
+    const selMercado     = document.getElementById('sel-mercado');
+    const btnCrear       = document.getElementById('btn-crear');
+    const fechaFiltro    = document.getElementById('filtro-fecha');
+    const selPortafolio  = document.getElementById('sel-portafolio');
+    const btnRefresh     = document.getElementById('btn-refresh');
+    const btnHistory     = document.getElementById('btn-history');
+    const btnDownload    = document.getElementById('btn-download');
+    const btnEdit        = document.getElementById('btn-edit');
+    const btnRenew       = document.getElementById('btn-renew');
+    const btnCancel      = document.getElementById('btn-cancel');
+    const tableBody      = document.querySelector('#intencionesTable tbody');
+    const perfilUsuario  = document.getElementById("PerfilUsuarioIngresa");
+    const usuarioIngresa = document.getElementById("UsuarioIngresa");
+    const dataWrapper    = document.getElementById("data-table-wrapper");
+    const formWrapper    = document.getElementById("formulario-wrapper");
+    const formTableHead  = document.getElementById("formulario-headers");
+    const formTableBody  = document.getElementById("formulario-body");
+
+    const today = new Date().toISOString().slice(0,10);
+    fechaFiltro.max = today;
+    fechaFiltro.value = today;
+
+    let currentPage = 1;
+    const rowsPerPage = 20;
+    let totalRows = 1000;
+
+    function loadGerentesPortafolios(){
+      if (perfilUsuario.value == '4' || perfilUsuario.value == '7'){
+        selPortafolio.innerHTML = `<option value="">Cargando...</option>`;
+        selPortafolio.disabled = true;
+        const params = new URLSearchParams();
+        params.append("id","listargerentesportafolios");
+
+        fetch('misordenes.asp',{
+          method:"POST",
+          headers:{ 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params.toString()
+        })
+        .then(res => res.json())
+        .then(data => {
+          selPortafolio.innerHTML = data.length ? `<option value="">(Todos)</option>` : `<option value="">(Sin gerentes)</option>`;
+          data.forEach(item => {
+            const opt = document.createElement('option');
+            opt.value = item.Usuario;
+            opt.textContent = item.Usuario;
+            selPortafolio.appendChild(opt);
+          });
+        })
+        .catch(err => {
+          console.error("Error cargando gerentes: ",err);
+          selPortafolio.innerHTML = `<option value="">Error al cargar</option>`;
+        })
+        .finally(() => selPortafolio.disabled = false);
+      } else {
+        selPortafolio.innerHTML = `<option value="${usuarioIngresa.value}">${usuarioIngresa.value}</option>`;
+        selPortafolio.disabled = true;
+      }
+    }
+
+    function formatearNombreColumna(campo) {
+      return campo.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
+    }
+
+    function renderPaginationControls() {
+      const totalPages = Math.ceil(totalRows / rowsPerPage);
+      const wrapper = document.querySelector(".table-wrapper");
+      let pagination = document.getElementById("pagination");
+      if (!pagination) {
+        pagination = document.createElement("div");
+        pagination.id = "pagination";
+        pagination.style.marginTop = "1rem";
+        pagination.style.textAlign = "center";
+        wrapper.appendChild(pagination);
+      }
+
+      pagination.innerHTML = "";
+      for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement("button");
+        btn.textContent = i;
+        btn.className = i === currentPage ? "btn-refresh" : "btn-create";
+        btn.style.margin = "0 2px";
+        btn.addEventListener("click", () => {
+          currentPage = i;
+          loadDataTable();
+        });
+        pagination.appendChild(btn);
+      }
+    }
+
+    function loadDataTable(){
+      const params = new URLSearchParams();
+      params.append("id", "obtenerintencionesgerentesparavisualizar");
+      params.append("fecha", fechaFiltro.value);
+      params.append("pagina", currentPage);
+      params.append("cantidad", rowsPerPage);
+      if (selPortafolio.value !== "") {
+        params.append("gerente", selPortafolio.value);
+      }
+
+      tableBody.innerHTML = `<tr class="placeholder"><td colspan="8">Cargando datos…</td></tr>`;
+
+      fetch('misordenes.asp', {
+        method: "POST",
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: params.toString()
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (!Array.isArray(data) || data.length === 0) {
+          tableBody.innerHTML = `<tr class="placeholder"><td colspan="8">Sin resultados para los filtros seleccionados.</td></tr>`;
+          document.getElementById("intencionesHeader").innerHTML = "";
+          return;
+        }
+
+        const headerRow = document.getElementById("intencionesHeader");
+        headerRow.innerHTML = '<th><input type="checkbox" id="selectAll"></th>';
+        Object.keys(data[0]).forEach(key => {
+          const th = document.createElement("th");
+          th.textContent = formatearNombreColumna(key);
+          headerRow.appendChild(th);
+        });
+
+        tableBody.innerHTML = "";
+        data.forEach(item => {
+          const row = document.createElement("tr"); 
+          const values = Object.values(item)
+          .map(val => `<td>${val ?? ""}</td>`)
+          .join("");
+          row.innerHTML = `<td><input type="checkbox" class="selectRow" data-id="${item.Id}"></td>${values}`;
+          tableBody.appendChild(row);
+        });
+
+        sorttable.makeSortable(document.getElementById("intencionesTable"));
+
+        const ths = document.querySelectorAll("#intencionesHeader th");
+        for (let i = 0; i < ths.length; i++) {
+          if (ths[i].textContent.trim().toLowerCase() === "id") {
+            ths[i].click(); ths[i].click(); break;
+          }
+        }
+
+        renderPaginationControls();
+      })
+      .catch(err => {
+        console.error("Error al cargar tabla:", err);
+        tableBody.innerHTML = `<tr class="placeholder"><td colspan="8">Error al cargar los datos. Use 'Refrescar'.</td></tr>`;
+      });
+    }
+
+    function construirFormulario(campoArray, filas = 3) {
+      formTableHead.innerHTML = "";
+      formTableBody.innerHTML = "";
+
+      campoArray.forEach(campo => {
+        const th = document.createElement("th");
+        th.textContent = campo;
+        formTableHead.appendChild(th);
+      });
+
+      for (let i = 0; i < filas; i++) {
+        const tr = document.createElement("tr");
+        campoArray.forEach(() => {
+          const td = document.createElement("td");
+          td.contentEditable = "true";
+          tr.appendChild(td);
+        });
+        formTableBody.appendChild(tr);
+      }
+      if (campoArray.includes("Id Portafolio") && campoArray.includes("Portafolio")) {
+      fetch('misordenes.asp', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: new URLSearchParams({id: 'listarportafolios'})
+      })
+      .then(res => res.json())
+      .then(data => {
+        const filas = formTableBody.querySelectorAll("tr");
+        filas.forEach(fila => {
+          const idIndex = campoArray.indexOf("Id Portafolio");
+          const nombreIndex = campoArray.indexOf("Portafolio");
+          const celdaId = fila.cells[idIndex];
+          const celdaNombre = fila.cells[nombreIndex];
+
+          const select = document.createElement("select");
+          select.addEventListener("change", e => {
+            const idPortafolio = e.target.value;
+
+            // Actualiza nombre del portafolio
+            celdaNombre.textContent = e.target.selectedOptions[0].dataset.nombre || "";
+
+            // Carga especies
+            fetch('misordenes.asp', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+              body: new URLSearchParams({
+                id: 'listarEspeciesFidu',
+                id_portafolio: idPortafolio
+              })
+            })
+            .then(res => res.json())
+            .then(data => {
+              const filas = formTableBody.querySelectorAll("tr");
+              filas.forEach(fila => {
+                const indexEspecie = campoArray.indexOf("Especie");
+                const celdaEspecie = fila.cells[indexEspecie];
+
+                const selectEspecie = document.createElement("select");
+                selectEspecie.style.width = "100%";
+
+                // Opción vacía por defecto
+                const optEmpty = document.createElement("option");
+                optEmpty.value = "";
+                optEmpty.textContent = "Selecciona...";
+                selectEspecie.appendChild(optEmpty);
+
+                data.forEach(es => {
+                  const option = document.createElement("option");
+                  option.value = es.Especie;
+                  option.textContent = es.Especie;
+                  selectEspecie.appendChild(option);
+                });
+
+                // Evento al seleccionar especie → cargar nemotécnico
+                selectEspecie.addEventListener("change", ev => {
+                  const especie = ev.target.value;
+                  const celdaNemo = fila.cells[campoArray.indexOf("Nemotécnico")];
+                  const selectNemo = document.createElement("select");
+                  selectNemo.style.width = "100%";
+
+                  const endpoint = especie
+                    ? 'listarNemosFiduPorEspecie'
+                    : 'listarNemosFiduSinEspecie';
+
+                  const params = especie
+                    ? new URLSearchParams({id: endpoint, especie: especie})
+                    : new URLSearchParams({id: endpoint, id_portafolio: idPortafolio});
+
+                  fetch('misordenes.asp', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: params
+                  })
+                  .then(res => res.json())
+                  .then(nemos => {
+                    selectNemo.innerHTML = "";
+                    const emptyOpt = document.createElement("option");
+                    emptyOpt.value = "";
+                    emptyOpt.textContent = "Selecciona...";
+                    selectNemo.appendChild(emptyOpt);
+
+                    nemos.forEach(n => {
+                      const option = document.createElement("option");
+                      option.value = n.Nemo;
+                      option.textContent = n.Nemo;
+                      selectNemo.appendChild(option);
+                    });
+
+                    celdaNemo.textContent = "";
+                    celdaNemo.appendChild(selectNemo);
+                  });
+                });
+
+                celdaEspecie.textContent = "";
+                celdaEspecie.appendChild(selectEspecie);
+                });
+              });
+            });
+
+
+          select.style.width = "100%";
+          data.forEach(opt => {
+            const option = document.createElement("option");
+            option.value = opt.IdPortafolio;
+            option.textContent = opt.IdPortafolio;
+            option.dataset.nombre = opt.Nombre;
+            select.appendChild(option);
+          });
+
+      
+
+          celdaId.textContent = "";
+          celdaId.appendChild(select);
+        });
+      });
+    }
+    if ((campoArray.includes("Mercado")) && ["Renta Variable", "Swaps"].includes(selMercado.value)) {
+    const opcionesMercado = ["LOCAL", "INTERNACIONAL"];
+    const filas = formTableBody.querySelectorAll("tr");
+    filas.forEach(fila => {
+      const indexMercado = campoArray.indexOf("Mercado");
+      const celda = fila.cells[indexMercado];
+
+      const select = document.createElement("select");
+      select.style.width = "100%";
+      opcionesMercado.forEach(opcion => {
+        const opt = document.createElement("option");
+        opt.value = opcion;
+        opt.textContent = opcion;
+        select.appendChild(opt);
+      });
+
+      celda.textContent = "";
+      celda.appendChild(select);
+    });
+  }
+  if (campoArray.includes("Tipo operación") && tipoOperacionPorMercado[selMercado.value]) {
+    const opciones = tipoOperacionPorMercado[selMercado.value];
+    const filas = formTableBody.querySelectorAll("tr");
+    filas.forEach(fila => {
+      const indexOperacion = campoArray.indexOf("Tipo operación");
+      const celda = fila.cells[indexOperacion];
+
+      const select = document.createElement("select");
+      select.style.width = "100%";
+      opciones.forEach(op => {
+        const opt = document.createElement("option");
+        opt.value = op;
+        opt.textContent = op;
+        select.appendChild(opt);
+      });
+
+      celda.textContent = "";
+      celda.appendChild(select);
+    });
+  }
+
+
+
+    }
+
+    function validarSeleccion(){
+      currentPage = 1;
+      loadDataTable();
+    }
+
+    btnCrear.addEventListener("click", () => {
+      const mercado = selMercado.value;
+      const campos = camposPorMercado[mercado];
+      if (!campos) return alert("Mercado no soportado.");
+
+      dataWrapper.style.display = "none";
+      formWrapper.style.display = "block";
+
+      construirFormulario(campos);
+    });
+
+    document.querySelector(".btn-cancel-form").addEventListener("click", () => {
+      formWrapper.style.display = "none";
+      dataWrapper.style.display = "block";
+    });
+
+    document.querySelector(".btn-add-row").addEventListener("click", () => {
+      const columnas = formTableHead.querySelectorAll("th").length;
+      const tr = document.createElement("tr");
+      for (let i = 0; i < columnas; i++) {
+        const td = document.createElement("td");
+        td.contentEditable = "true";
+        tr.appendChild(td);
+      }
+      formTableBody.appendChild(tr);
+    });
+
+    document.querySelector(".btn-save").addEventListener("click", () => {
+      const datos = [];
+      formTableBody.querySelectorAll("tr").forEach(row => {
+        const fila = [];
+        row.querySelectorAll("td").forEach(cell => fila.push(cell.textContent.trim()));
+        datos.push(fila);
+      });
+      console.log("Datos a guardar:", datos);
+      alert("Datos capturados en consola.");
+    });
+
+    btnRefresh.addEventListener('click', validarSeleccion);
+    btnHistory.addEventListener('click', () => console.log('Ver historia'));
+    btnDownload.addEventListener('click', () => console.log('Descargar reporte'));
+    btnEdit.addEventListener('click', () => console.log('Editar intención seleccionada'));
+    btnRenew.addEventListener('click', () => console.log('Renovar intención seleccionada'));
+    btnCancel.addEventListener('click', () => console.log('Cancelar intención seleccionada'));
+
+    loadGerentesPortafolios();
+    loadDataTable();
+  })();
+</script>
+
+</body>
+</html>

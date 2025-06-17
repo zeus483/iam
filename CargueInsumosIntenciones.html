@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="../ScriptsJQuery/sheetjs/xlsx.full.min.js"></script>
+        <script src="../ScriptsJQuery/papaparse/papaparse.min.js"></script>
+        <script src="../intencionesAM/Cargue_datos.js"></script>
+        
+    </head>
+    <body>
+        <h1>Cargue de Insumos</h1>
+        <div class="insumosIntenciones">
+            <div class="portafoliocrm">
+                <h3>Portafolios CRM [Cargue aqui el insumo para subirlo a la base de datos]</h3>
+                <input type="file" id="fileInput" accept=".xlsm">
+                <button id="subirinsumocrm" onclick="subirinsumocrm()">Subir Insumo</button>
+                <script>
+                    async function subirinsumocrm() {
+                        const archivo = document.getElementById('fileInput').files[0];
+                        const urlBackend = "cargar_insumo.asp"
+                        if (!archivo) {
+                            alert("Por favor, selecciona un archivo.");
+                            return;
+                        }
+                        try{
+                            await CargarPortafoliosCRM(archivo, urlBackend);
+                            alert("Archivo cargado exitosamente.");
+                        }catch (error) {
+                            console.error("Error al cargar el archivo:", error);
+                            alert("Error al cargar el archivo. Por favor, revisa la consola para más detalles.");
+
+                        }
+                    }
+                </script>
+            </div>
+            <div class="consolidadofidu">
+                <h3>Consolidado Fiduciaria [Cargue aqui el insumo para subirlo a la base de datos]</h3>
+                <input type="file" id="fileInputFidu" accept=".xlsx">
+                <button id="subirinsumofidu" onclick="subirinsumofidu()">Subir Insumo</button>
+                <script>
+                    async function subirinsumofidu() {
+                        const archivo = document.getElementById('fileInputFidu').files[0];
+                        const urlBackend = "cargar_insumo.asp"
+                        if (!archivo) {
+                            alert("Por favor, selecciona un archivo.");
+                            return;
+                        }
+                        try{
+                            await cargarConsolidadoFidu(archivo, urlBackend);
+                            alert("Archivo cargado exitosamente.");
+                        }catch (error) {
+                            console.error("Error al cargar el archivo:", error);
+                            alert("Error al cargar el archivo. Por favor, revisa la consola para más detalles.");
+
+                        }
+                    }
+                </script>
+            </div>
+            <div class="consolidadovalores">
+                <h3>Consolidado Valores [Cargue aqui el insumo para subirlo a la base de datos]</h3>
+                <input type="file" id="fileInputValores" accept=".xlsx">
+                <button id="subirinsumovalores" onclick="subirinsumovalores()">Subir Insumo</button>
+                <script>
+                    async function subirinsumovalores() {
+                        const archivo = document.getElementById('fileInputValores').files[0];
+                        const urlBackend = "cargar_insumo.asp"
+                        if (!archivo) {
+                            alert("Por favor, selecciona un archivo.");
+                            return;
+                        }
+                        try{
+                            await cargarConsolidadoValores(archivo, urlBackend);
+                            alert("Archivo cargado exitosamente.");
+                        }catch (error) {
+                            console.error("Error al cargar el archivo:", error);
+                            alert("Error al cargar el archivo. Por favor, revisa la consola para más detalles.");
+
+                        }
+                    }
+                </script>
+            </div>
+            <div class="cargueBaseCuposFidu">
+                <h3>Cargue Base Cupos Fiduciaria [Cargue el insumo para subirlo a la base de datos]</h3>
+                <input type="file" id="fileInputCuposFidu" accept=".xlsx">
+                <button id="subirinsumocuposfidu" onclick="subirinsumocuposfidu()">Subir Insumo</button>
+                <script>
+                    async function subirinsumocuposfidu() {
+                        const archivo = document.getElementById('fileInputCuposFidu').files[0];
+                        const urlBackend = "cargar_insumo.asp"
+                        if (!archivo) {
+                            alert("Por favor, selecciona un archivo.");
+                            return;
+                        }
+                        try{
+                            await cargueBaseCuposFidu(archivo, urlBackend);
+                            alert("Archivo cargado exitosamente.");
+                        }catch (error) {
+                            console.error("Error al cargar el archivo:", error);
+                            alert("Error al cargar el archivo. Por favor, revisa la consola para más detalles.");
+
+                        }
+                    }
+                </script>
+            </div>
+            <div class="cargueBaseCuposValores">
+                <h3>Cargue Base Cupos Valores [Cargue el insumo para subirlo a la base de datos]</h3>
+                <input type="file" id="fileInputCuposValores" accept=".xlsx">
+                <button id="subirinsumocuposvalores" onclick="subirinsumocuposvalores()">Subir Insumo</button>
+                <script>
+                    async function subirinsumocuposvalores() {
+                        const archivo = document.getElementById('fileInputCuposValores').files[0];
+                        const urlBackend = "cargar_insumo.asp"
+                        if (!archivo) {
+                            alert("Por favor, selecciona un archivo.");
+                            return;
+                        }
+                        try{
+                            await cargueBaseCuposValores(archivo, urlBackend);
+                            alert("Archivo cargado exitosamente.");
+                        }catch (error) {
+                            console.error("Error al cargar el archivo:", error);
+                            alert("Error al cargar el archivo. Por favor, revisa la consola para más detalles.");
+
+                        }
+                    }
+                </script>
+            </div>
+            <div class="cargueoperacionespendientesfidu">
+                <h3>Cargue Operaciones Pendientes Fiduciaria [Cargue el insumo para subirlo a la base de datos]</h3>
+                <input type="file" id="fileInputOperacionesPendientesFidu" accept=".xlsx">
+                <button id="subirinsumooperacionespendientesfidu" onclick="subirinsumooperacionespendientesfidu()">Subir Insumo</button>
+                <script>
+                    async function subirinsumooperacionespendientesfidu() {
+                        const archivo = document.getElementById('fileInputOperacionesPendientesFidu').files[0];
+                        const urlBackend = "cargar_insumo.asp"
+                        if (!archivo) {
+                            alert("Por favor, selecciona un archivo.");
+                            return;
+                        }
+                        try{
+                            await cargarOperacionesPendientesFidu(archivo, urlBackend);
+                            alert("Archivo cargado exitosamente.");
+                        }catch (error) {
+                            console.error("Error al cargar el archivo:", error);
+                            alert("Error al cargar el archivo. Por favor, revisa la consola para más detalles.");
+
+                        }
+                    }
+                </script>
+            </div>
+        </div>
+    </body>
+</html>
